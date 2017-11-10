@@ -1,7 +1,12 @@
 package com.qc; 
 
 public class JiraUtils {
-
+    def build_number
+    def ticket_number
+    
+    JiraUtils(build_number) {
+        this.build_number = build_number
+    }
     /* Initialize jira variables
      * - Add a new tag to the github repository
      * - Create a deployment ticket for the deployment
@@ -15,7 +20,7 @@ public class JiraUtils {
     
     /* Create a new tag for the release and add it to the git repository */
     def _tag_deployment() {
-        def new_tag = "v${env.BUILD_NUMBER}"
+        def new_tag = "v" + this.build_number
         withCredentials([[$class: 'UsernamePasswordMultiBinding',
                 credentialsId: '3cf17090-f5eb-42b5-800c-b761b9e55085',
                 usernameVariable: 'GIT_USERNAME',
@@ -49,7 +54,7 @@ public class JiraUtils {
              ]
     
             response = jiraNewIssue issue: deployment_ticket
-            env.TICKET_NUMBER = response.data.key
+            this.ticket_number = response.data.key
         }
     }
     
@@ -81,17 +86,17 @@ public class JiraUtils {
                 transition: [ id: transition_id ] /* transition = status1 -> status2 */
             ]
             
-            jiraTransitionIssue idOrKey: "${env.TICKET_NUMBER}", input: transitionInput
+            jiraTransitionIssue idOrKey: this.ticket_number, input: transitionInput
         }
     }
     
     /* Post a comment to the JIRA ticket and also forward it to Slack */
     def _comment(comment_text) {
         withEnv(['JIRA_SITE=JIRA']) {
-            jiraAddComment idOrKey: "${env.TICKET_NUMBER}", comment: comment_text
+            jiraAddComment idOrKey: this.ticket_number, comment: comment_text
         }
         
-        _post_to_slack("${env.TICKET_NUMBER}: " + comment_text)
+        _post_to_slack(this.ticket_number + ": " + comment_text)
     }
     
     /* Post a message to slack */
