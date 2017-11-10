@@ -1,6 +1,6 @@
 package com.qc; 
 
-public class JiraUtils {
+class JiraUtils implements Serializable {
     def build_number
     def ticket_number
     
